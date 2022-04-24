@@ -6,6 +6,20 @@ from autolab_core import RigidTransform
 from frankapy import FrankaArm, SensorDataMessageType
 from frankapy import FrankaConstants as FC
 
+WORKSPACE_WALLS = np.array([
+        # sides
+        [0.15, 0.46, 0.5, 0, 0, 0, 1.2, 0.01, 1.1],
+        [0.15, -0.46, 0.5, 0, 0, 0, 1.2, 0.01, 1.1],
+        # back
+        [-0.41, 0, 0.5, 0, 0, 0, 0.01, 1, 1.1],
+        # front
+        [0.75, 0, 0.5, 0, 0, 0, 0.01, 1, 1.1],
+        # top
+        [0.2, 0, 1, 0, 0, 0, 1.2, 1, 0.01],
+        # bottom
+        [0.2, 0, -0.05, 0, 0, 0, 1.2, 1, 0.01]
+    ])
+
 def main():
     trajectory_ = []
 
@@ -66,6 +80,26 @@ def main():
     for x_val, y_val, t in zip(x, y, time):
         trajectory_point = RigidTransform(translation=np.array([sx, sz, sz]), rotation=franka_arm.rotation, from_frame=franka_arm.from_frame, to_frame=franka_arm.from_frame)
         trajectory_.append(trajectory_point)
+    
+    collision_check(trajectory_)
+
+def collision_check(trajectory):
+
+    for pose in trajectory:
+        x = pose.translation[0]
+        y = pose.translation[1]
+        z = pose.translation[2]
+
+        # bottom
+        if(z<WORKSPACE_WALLS[5][2]):
+            return True   
+        # front
+        elif(x>WORKSPACE_WALLS[3][0]):
+            return True
+        #top
+        elif(z>WORKSPACE_WALLS[4][2]):
+            return True
+    return False
 
 
 ########################################### MAIN ###########################################
